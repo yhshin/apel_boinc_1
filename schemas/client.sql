@@ -56,7 +56,7 @@ CREATE TABLE JobRecords (
 DROP TABLE IF EXISTS EventRecords;
 CREATE TABLE EventRecords (
   SiteID          INT             NOT NULL, -- foreign key
-  JobName         VARCHAR(60)     NOT NULL,
+  JobName         VARCHAR(70)     NOT NULL,
   LocalUserID     VARCHAR(20),
   LocalUserGroup  VARCHAR(20),
   WallDuration    INT,
@@ -80,7 +80,7 @@ DROP PROCEDURE IF EXISTS InsertEventRecord;
 DELIMITER //
 CREATE PROCEDURE InsertEventRecord(
   site       VARCHAR(255),
-  jobName        VARCHAR(60),
+  jobName        VARCHAR(70),
   localUserId    VARCHAR(20),
   localUserGroup VARCHAR(20),
   wallDuration   INT,
@@ -106,7 +106,7 @@ DROP PROCEDURE IF EXISTS ReplaceEventRecord;
 DELIMITER //
 CREATE PROCEDURE ReplaceEventRecord(
   site       VARCHAR(255),
-  jobName        VARCHAR(60),
+  jobName        VARCHAR(70),
   localUserId    VARCHAR(20),
   localUserGroup VARCHAR(20),
   wallDuration   INT,
@@ -172,6 +172,32 @@ BEGIN
                              Processed)
   VALUES (timeStamp, DNLookup(globalUserName), fullyQualifiedAttributeName, VOLookup(vo), VOGroupLookup(VOGroup),
           VORoleLookup(VORole), SubmitHostLookup(ce), globalJobId, lrmsId, SiteLookup(site),
+          validFrom, validUntil, processed);
+END //
+DELIMITER ;
+
+DROP PROCEDURE IF EXISTS ReplaceBlahdRecord;
+DELIMITER //
+CREATE PROCEDURE ReplaceBlahdRecord(
+  timeStamp                   DATETIME,
+  globalUserName              VARCHAR(255),
+  fullyQualifiedAttributeName VARCHAR(255),
+  vo                          VARCHAR(255),
+  VOGroup                     VARCHAR(255),
+  VORole                      VARCHAR(255),
+  ce                          VARCHAR(255),
+  globalJobId                 VARCHAR(255),
+  lrmsId                      VARCHAR(255),
+  site                        VARCHAR(50) ,
+  validFrom                   DATETIME,
+  validUntil                  DATETIME, 
+  processed                   INT)
+BEGIN
+  REPLACE INTO BlahdRecords (TimeStamp , GlobalUserNameID, FQAN, VOID, VOGroupID, 
+                             VORoleID, CEID, GlobalJobId, LrmsId, SiteID, ValidFrom, ValidUntil,
+                             Processed)
+  VALUES (timeStamp, DNLookup(globalUserName), fullyQualifiedAttributeName, VOLookup(vo), VOGroupLookup(VOGroup), 
+          VORoleLookup(VORole), SubmitHostLookup(ce), globalJobId, lrmsId, SiteLookup(site), 
           validFrom, validUntil, processed);
 END //
 DELIMITER ;

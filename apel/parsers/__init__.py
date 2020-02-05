@@ -27,3 +27,5 @@ from lsf import LSFParser
 from pbs import PBSParser
 from sge import SGEParser
 from slurm import SlurmParser
+from boinc import BoincParser
+from boinc import BoincBlahParser

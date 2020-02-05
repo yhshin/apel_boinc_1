@@ -44,6 +44,8 @@ from apel.parsers.sge import SGEParser
 from apel.parsers.pbs import PBSParser
 from apel.parsers.slurm import SlurmParser
 from apel.parsers.htcondor import HTCondorParser
+from apel.parsers.boinc import BoincParser
+from apel.parsers.boinc import BoincBlahParser
 
 
 LOGGER_ID = 'parser'
@@ -58,6 +60,8 @@ PARSERS = {
            'SLURM': SlurmParser,
            'blah' : BlahParser,
            'HTCondor': HTCondorParser,
+           'BOINC': BoincParser,
+           'boinc_blah' : BoincBlahParser,  # BlahdRecord from boinc job log
            }
 
 
@@ -218,7 +222,8 @@ def scan_dir(parser, dirpath, reparse, expr, apel_db, processed):
                 else:
                     log.info('Skipping file (already parsed): %s ', abs_file)
             elif os.path.isfile(abs_file):
-                log.info('Filename does not match pattern: %s', item)
+                #log.info('Filename does not match pattern: %s', item)
+                log.debug('Filename does not match pattern: %s', item)
 
         return updated
 
@@ -291,6 +296,8 @@ def handle_parsing(log_type, apel_db, cp):
         except ConfigParser.NoOptionError:
             log.warning("Option 'ge_ms_timestamps' not found in section 'batch'"
                         " . Will default to 'false'.")
+    elif log_type in ['BOINC', 'boinc_blah']:
+        parser.set_boinc_params(cp)
 
     # regular expressions for blah log files and for batch log files
     try:
@@ -383,7 +390,11 @@ def main():
     # blah parsing
     try:
         if cp.getboolean('blah', 'enabled'):
-            handle_parsing('blah', apel_db, cp)
+            if cp.get('batch', 'type') == 'BOINC':
+                log_type = 'boinc_blah'
+            else:
+                log_type = 'blah'
+            handle_parsing(log_type, apel_db, cp)
     except (ParserConfigException, ConfigParser.NoOptionError), e:
         log.fatal('Parser misconfigured: %s', e)
         log.fatal('Parser will exit.')
