@@ -140,7 +140,7 @@ def parse_file(parser, apel_db, fp, replace):
     else:
         log.info('Parsed %d lines', parsed)
         log.info('Ignored %d lines (incomplete jobs)', ignored)
-        log.info('Failed to parse %d lines', failed)
+        log.info('Failed %d lines', failed)
 
         for error in exceptions:
             log.error('%s raised %d times', error, exceptions[error])
