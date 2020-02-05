@@ -18,6 +18,7 @@ These extract data from the following batch systems:
 * SGE/OGE
 * SLURM
 * HTCondor
+* BOINC
 
 and place it in the client database.
 
