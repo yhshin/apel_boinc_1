@@ -34,7 +34,8 @@ thisnode = platform.node().split('.')[0]  # short hostname
 
 #
 def build_jobname(name):
-    return thisnode + '.' + name  # NOTE: need to modify client.sql to increase JobName size
+    #return thisnode + '.' + name  # NOTE: need to modify client.sql to increase JobName size
+    return thisnode + '.' + name[:20]
 
 #
 def get_boinc_conf_param(cp, name, default=None, type_=None):
@@ -47,18 +48,10 @@ def get_boinc_conf_param(cp, name, default=None, type_=None):
     log.info('[boinc/{0}] = {1}'.format(name, value))
     return value
     
-#def get_int_boinc_conf_param(cp, name, default=None):
-#    try:
-#        value = cp.getint('boinc', name)
-#    except ConfigParser.NoOptionError as e:
-#        value = default
-#    log.info('[boinc/{0}] = {1}'.format(name, value))
-#    return value
-
 
 class BoincParser(Parser):
     '''
-    First implementation of the APEL parser for Boinc
+    An APEL parser for Boinc
     '''
     def __init__(self, site, machine_name, mpi):
         Parser.__init__(self, site, machine_name, mpi)
@@ -72,10 +65,9 @@ class BoincParser(Parser):
                                                     'APEL-BOINC-APEL-BOINC')
         #self._processors = get_int_boinc_conf_param(cp, 'processors', 1)
         self._processors = get_boinc_conf_param(cp, 'processors', 1, type_=int)
-        #log.info('Boinc: localuserid={0}, infrastructure={1}, processors={2}'.format(
-        #         self._local_userid, self._infrastructure, self._processors))
 
-    #
+
+    # Adapted from HTCondorParser in htcondor.py
     def parse(self, line):
         '''
         Parses single line from accounting log file.
@@ -114,7 +106,7 @@ class BoincParser(Parser):
 
 class BoincBlahParser(Parser):
     '''
-    First implementation of the APEL parser for Boinc to generate BlahdRecords
+    An APEL blah parser for Boinc jobs to fill BlahdRecords
     '''
     def __init__(self, site, machine_name, mpi):
         Parser.__init__(self, site, machine_name, mpi)
@@ -129,7 +121,7 @@ class BoincBlahParser(Parser):
         #self._fqan = self._get_boinc_conf_param(cp, 'fqan', None)
         #log.info('BoincBlah: vo={0}'.format(self._vo))
 
-    #
+    # Adaped from BlahParsr in blah.py
     def parse(self, line):
         '''
         Parses single line from accounting log file.
@@ -150,7 +142,7 @@ class BoincBlahParser(Parser):
             #'VOGroup'       : lambda x: '',
             #'VORole'        : lambda x: '',
             'CE'             : lambda x: self.machine_name,
-            #'GlobalJobId'   : lambda x: '',         # x[8]
+            'GlobalJobId'    : lambda x: x[8],
             'LrmsId'         : lambda x: build_jobname(x[8]),
             'Site'           : lambda x: self.site_name,
             'ValidFrom'      : lambda x: valid_from(utcdt),
