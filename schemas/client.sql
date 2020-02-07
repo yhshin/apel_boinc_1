@@ -56,7 +56,7 @@ CREATE TABLE JobRecords (
 DROP TABLE IF EXISTS EventRecords;
 CREATE TABLE EventRecords (
   SiteID          INT             NOT NULL, -- foreign key
-  JobName         VARCHAR(70)     NOT NULL,
+  JobName         VARCHAR(60)     NOT NULL,
   LocalUserID     VARCHAR(20),
   LocalUserGroup  VARCHAR(20),
   WallDuration    INT,
@@ -80,7 +80,7 @@ DROP PROCEDURE IF EXISTS InsertEventRecord;
 DELIMITER //
 CREATE PROCEDURE InsertEventRecord(
   site       VARCHAR(255),
-  jobName        VARCHAR(70),
+  jobName        VARCHAR(60),
   localUserId    VARCHAR(20),
   localUserGroup VARCHAR(20),
   wallDuration   INT,
@@ -106,7 +106,7 @@ DROP PROCEDURE IF EXISTS ReplaceEventRecord;
 DELIMITER //
 CREATE PROCEDURE ReplaceEventRecord(
   site       VARCHAR(255),
-  jobName        VARCHAR(70),
+  jobName        VARCHAR(60),
   localUserId    VARCHAR(20),
   localUserGroup VARCHAR(20),
   wallDuration   INT,
