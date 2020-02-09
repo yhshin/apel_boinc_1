@@ -135,7 +135,7 @@ class BoincParser(Parser):
                    'StopTime'        : lambda x: int(x[0]),
                    #'MemoryReal'      : lambda x: 0,   # N/A in Boinc
                    #'MemoryVirtual'   : lambda x: 0,   # N/A in Boinc
-                   'Processors'      : lambda x: self._processors,
+                   'Processors'      : lambda x: 1,    # self._processors,
                    'NodeCount'       : lambda x: 1
                   }
 
