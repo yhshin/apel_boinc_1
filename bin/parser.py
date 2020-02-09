@@ -131,11 +131,12 @@ def parse_file(parser, apel_db, fp, replace):
                 del records
                 records = []
 
-    apel_db.load_records(records, replace=replace)
+    if len(records) != 0:
+        apel_db.load_records(records, replace=replace)
 
     if index == 0:
         log.info('Ignored empty file.')
-    elif parsed == 0:
+    elif parsed == 0 and ignored == 0:
         log.warn('Failed to parse file.  Is %s correct?', parser.__class__.__name__)
     else:
         log.info('Parsed %d lines', parsed)
@@ -298,6 +299,7 @@ def handle_parsing(log_type, apel_db, cp):
                         " . Will default to 'false'.")
     elif log_type in ['BOINC', 'boinc_blah']:
         parser.set_boinc_params(cp)
+        parser.set_last_parsed_endtime(cp)
 
     # regular expressions for blah log files and for batch log files
     try:

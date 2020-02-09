@@ -28,6 +28,9 @@ from apel.common import valid_from, valid_until, parse_timestamp
 import platform               # hostname
 from datetime import datetime
 
+import MySQLdb
+
+#
 log = logging.getLogger(__name__)
 
 thisnode = platform.node().split('.')[0]  # short hostname
@@ -48,7 +51,40 @@ def get_boinc_conf_param(cp, name, default=None, type_=None):
     log.info('[boinc/{0}] = {1}'.format(name, value))
     return value
     
+#
+def get_last_endtime(cp, log_type):
+    import calendar
 
+    params = {'blah':  {'time': 'TimeStamp', 'table': 'BlahdRecords',
+                        'colname': 'LrmsId'},
+              'batch': {'time': 'EndTime',   'table': 'EventRecords',
+                        'colname': 'JobName'}}
+    d = params[log_type]
+    d['node'] = thisnode
+
+    q = "SELECT MAX({time}) FROM {table} WHERE {colname} LIKE '{node}.%'"
+    q = q.format(**d)
+
+    # assume that apel_db was successfully created and tested,
+    # which means all parameters are ok and should work.
+    db = MySQLdb.connect(host=cp.get('db', 'hostname'),
+                         port=cp.getint('db', 'port'),
+                         user=cp.get('db', 'username'),
+                         passwd=cp.get('db', 'password'),
+                         db=cp.get('db', 'name'))
+
+    c = db.cursor()
+    c.execute(q)
+    endtime, = c.fetchone() # already datetime object
+    if endtime:
+        last_endtime = calendar.timegm(endtime.timetuple())
+    else:
+        last_endtime = 0
+    db.close()
+    return last_endtime
+
+
+#
 class BoincParser(Parser):
     '''
     An APEL parser for Boinc
@@ -66,6 +102,10 @@ class BoincParser(Parser):
         #self._processors = get_int_boinc_conf_param(cp, 'processors', 1)
         self._processors = get_boinc_conf_param(cp, 'processors', 1, type_=int)
 
+    #
+    def set_last_parsed_endtime(self, cp):
+        self._last_parsed_endtime = get_last_endtime(cp, 'batch')
+        log.info('last parsed endtime : %s' % self._last_parsed_endtime)
 
     # Adapted from HTCondorParser in htcondor.py
     def parse(self, line):
@@ -75,6 +115,11 @@ class BoincParser(Parser):
         # endtime ue <ue> ct <cputime> fe <flops> nm <jobname> et <runtime> es <exit_status>
         
         values = line.strip().split()
+
+        # skip already parsed lines
+        endtime = int(values[0])
+        if endtime < self._last_parsed_endtime:
+            return
 
         cputime = int(round(float(values[4])))
 
@@ -121,6 +166,11 @@ class BoincBlahParser(Parser):
         #self._fqan = self._get_boinc_conf_param(cp, 'fqan', None)
         #log.info('BoincBlah: vo={0}'.format(self._vo))
 
+    #
+    def set_last_parsed_endtime(self, cp):
+        self._last_parsed_endtime = get_last_endtime(cp, 'blah')
+        log.info('== last parsed endtime : %s' % self._last_parsed_endtime)
+
     # Adaped from BlahParsr in blah.py
     def parse(self, line):
         '''
@@ -130,12 +180,18 @@ class BoincBlahParser(Parser):
         
         values = line.strip().split()
 
+        # skip already parsed lines
+        endtime = int(values[0])
+        if endtime < self._last_parsed_endtime:
+            return
+
+        # to use 'valid_from/until' functions
         timestamp = datetime.utcfromtimestamp(int(values[0])).strftime('%Y-%m-%d %H:%M:%S')
         utcdt = parse_timestamp(timestamp)
 
         # Simple mapping between keys in a log file and a table's columns
         mapping = {
-            'TimeStamp'      : lambda x: 'T'.join(timestamp.split()) + 'Z',
+            'TimeStamp'      : lambda x: int(x[0]),
             #'GlobalUserName': lambda x: '',
             #'FQAN'          : lambda x: '',
             'VO'             : lambda x: self._vo,
