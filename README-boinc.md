@@ -271,5 +271,10 @@ messages.
   ServiceLevel: 21.690
   NodeCount: 1
   Processors: 1
+  EarliestEndTime: 1578565351
+  LatestEndTime: 1580508691
+  WallDuration: 4021949
+  CpuDuration: 4021949
+  NumberOfJobs: 176
   %%
 ```
