@@ -36,9 +36,10 @@ log = logging.getLogger(__name__)
 thisnode = platform.node().split('.')[0]  # short hostname
 
 #
-def build_jobname(name):
+def build_jobname(name, endtime):
     #return thisnode + '.' + name  # NOTE: need to modify client.sql to increase JobName size
-    return thisnode + '.' + name[:20]
+    sep = '.'
+    return sep.join(('boinc', thisnode, endtime, name[:10]))
 
 #
 def get_boinc_conf_param(cp, name, default=None, type_=None):
@@ -62,7 +63,7 @@ def get_last_endtime(cp, log_type):
     d = params[log_type]
     d['node'] = thisnode
 
-    q = "SELECT MAX({time}) FROM {table} WHERE {colname} LIKE '{node}.%'"
+    q = "SELECT MAX({time}) FROM {table} WHERE {colname} LIKE 'boinc.{node}.%'"
     q = q.format(**d)
 
     # assume that apel_db was successfully created and tested,
@@ -126,7 +127,7 @@ class BoincParser(Parser):
         mapping = {'Site'            : lambda x: self.site_name,
                    'MachineName'     : lambda x: self.machine_name,
                    'Infrastructure'  : lambda x: self._infrastructure,
-                   'JobName'         : lambda x: build_jobname(x[8]),
+                   'JobName'         : lambda x: build_jobname(x[8], x[0]),
                    'LocalUserID'     : lambda x: self._local_user_id,
                    'LocalUserGroup'  : lambda x: "",       # "atlas",
                    'WallDuration'    : lambda x: cputime,  # Di's suggestion
